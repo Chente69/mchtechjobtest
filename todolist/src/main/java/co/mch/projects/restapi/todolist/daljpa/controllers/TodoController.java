@@ -1,0 +1,138 @@
+package co.mch.projects.restapi.todolist.daljpa.controllers;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import co.mch.projects.restapi.todolist.daljpa.repositories.TodoRepository;
+import co.mch.projects.restapi.todolist.daljpa.model.Todo;
+/**
+ * Rest Controler Component use to expose API Rest JSON web services
+ * @author José V Niño R
+ * @version 1.0
+ * @since 2023
+ */
+@CrossOrigin(origins = "http://localhost:8081")
+@RestController
+@RequestMapping("/api")
+public class TodoController {
+	@Autowired
+	TodoRepository todoRepository; // Inject dependency to the Repository component (Bean)
+
+    /**
+     * This method corresponds to HTTP GET method, that Queries all the Todo entities stored in H2 todolistapidb Data Base
+     * 
+     * @return ResponseEntity<List<Todo>> Todo Entity Collection
+     */
+	  @GetMapping("/todos")
+	  public ResponseEntity<List<Todo>> getAllTodoTask() {
+	    try {
+	        List<Todo> todos = new ArrayList<Todo>();
+
+	        todoRepository.findAll().forEach(todos::add);
+
+	        if (todos.isEmpty()) {
+	          return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	        }
+
+	        return new ResponseEntity<>(todos, HttpStatus.OK);
+	     } catch (Exception e) {
+	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+	     }	  
+	  }
+	  
+    /**
+     * This method corresponds to HTTP GET method, that Queries by the identifier one specific  Todo entities stored in H2 todolistapidb Data Base
+     * @param id: is the Todo unique identifier to query
+     * @return ResponseEntity<Todo>: Todo Entity
+     */
+	  @GetMapping("/todos/{id}")
+	  public ResponseEntity<Todo> getTodoTaskById(@PathVariable("id") long id) {
+		    Optional<Todo> todoData = todoRepository.findById(id);
+
+		    if (todoData.isPresent()) {
+		      return new ResponseEntity<>(todoData.get(), HttpStatus.OK);
+		    } else {
+		      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		    }	  
+	  }
+
+    /**
+     * This method corresponds to HTTP POST method, that saves (in H2 todolistapidb Data Base) the specific  Todo entity gives by param
+     * @param todo: is the Todo entity to create
+     * @return ResponseEntity<Todo>: Todo Entity created
+     */	  
+	  @PostMapping("/todos")
+	  public ResponseEntity<Todo> createTodoTask(@RequestBody Todo todo) {
+	    try {
+	    	Todo _todo = todoRepository
+	          .save(new Todo(todo.getTask(),  false));
+	      return new ResponseEntity<>(_todo, HttpStatus.CREATED);
+	    } catch (Exception e) {
+	      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
+	  }
+	  
+    /**
+     * This method corresponds to HTTP PUT method , that updates ((in H2 todolistapidb Data Base)  the specific saved Todo entity gives by param 
+     * @param todo: is the Todo entity with data to update
+     * @param id: is the Todo entity to Update
+     * @return ResponseEntity<Todo>: Todo Entity updated
+     */	 
+	  @PutMapping("/todos/{id}")
+	  public ResponseEntity<Todo> updateTodoTask(@PathVariable("id") long id, @RequestBody Todo todo) {
+	    Optional<Todo> todoData = todoRepository.findById(id);
+
+	    if (todoData.isPresent()) {
+	    	Todo _todo = todoData.get();
+	    	_todo.setTask(todo.getTask());
+	    	_todo.setCompleted(todo.isCompleted());
+	      return new ResponseEntity<>(todoRepository.save(_todo), HttpStatus.OK);
+	    } else {
+	      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	    }
+	  }
+
+    /**
+     * This method corresponds to HTTP DELETE method, that deletes  one specific Todo entity stored in H2 todolistapidb Data Base
+     * @param id: is the Todo unique identifier of the todo entity to delete
+     * @return ResponseEntity<HttpStatus>: Http Status
+     */
+	  @DeleteMapping("/todos/{id}")
+	  public ResponseEntity<HttpStatus> deleteTodoTask(@PathVariable("id") long id) {
+	    try {
+	    	todoRepository.deleteById(id);
+	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	    } catch (Exception e) {
+	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
+	  }
+	  
+    /**
+     * This method corresponds to HTTP DELETE method, that deletes all Todo entities stored in H2 todolistapidb Data Base
+     * @return ResponseEntity<HttpStatus>: Http Status
+     */
+	  @DeleteMapping("/todos")
+	  public ResponseEntity<HttpStatus> deleteAllTodoTask() {
+	    try {
+	    	todoRepository.deleteAll();
+	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	    } catch (Exception e) {
+	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
+
+	  }
+
+}
