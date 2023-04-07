@@ -2,7 +2,8 @@ package co.mch.projects.restapi.todolist.daljpa.model;
 import javax.persistence.*;
 
 /**
- * API Rest CRUD Spring Boot application.
+ * Entity Bean that correspond to a table(todos) in database H2
+ * where each properties correspond to a one field in the table
  * @author José V Niño R
  * @version 1.0
  * @since 2023
