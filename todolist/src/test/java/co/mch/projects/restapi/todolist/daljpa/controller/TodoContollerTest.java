@@ -1,17 +1,13 @@
 package co.mch.projects.restapi.todolist.daljpa.controller;
 
 import co.mch.projects.restapi.todolist.ApplicationConfig;
-import co.mch.projects.restapi.todolist.dalbusiness.services.TodoServiceImpl;
 import co.mch.projects.restapi.todolist.daljpa.model.Todo;
-import co.mch.projects.restapi.todolist.daljpa.repositories.TodoRepository;
-import co.mch.projects.restapi.todolist.daljpa.service.TodoServiceTest;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assertj.core.api.Assertions;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,14 +19,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
-import static org.mockito.BDDMockito.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,22 +32,17 @@ public class TodoContollerTest {
 
     @Autowired
     private MockMvc mockMvc;
-    
-	@InjectMocks
-	TodoServiceImpl todoService;
-	
-	@Mock
-	TodoRepository repository;
-    
+        
     @Autowired
     private ObjectMapper objectMapper;	
    
-    
+ // JUnit test for Get All Todos REST API
     @Test
     void shouldFetchAllTodos() throws Exception {
         this.mockMvc.perform(get(TODO_PATH)).andExpect(status().is(200));
     }
     
+ // JUnit test for Get  REST API ( Queries one todo by Id)
     @Test
     void shouldFetchOneTodoById() throws Exception {
         long id = 1L;
@@ -71,10 +58,12 @@ public class TodoContollerTest {
                 .andExpect(status().isOk()); 
     }    
     
+ // JUnit test for Post REST API ( Creates a new todo)
     @Test
     void shouldCreateNewTodo() throws Exception {
+    	// given - precondition or setup
     	Todo resource = new Todo("Task one",false);
-
+    	// when - action or behaviour that we are going test
         this.mockMvc.perform(post(TODO_PATH).contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(resource)))
                 .andExpect(status().isCreated())
@@ -84,7 +73,7 @@ public class TodoContollerTest {
     }
     
     
-    // JUnit test for update todo REST API - positive scenario
+    // JUnit test for PUT REST API - (update one todo) positive scenario
     @Test
     public void givenUpdatedTodo_whenUpdateTodo_thenReturnUpdateTodoObject() throws Exception{
         // given - precondition or setup
@@ -116,5 +105,28 @@ public class TodoContollerTest {
                 .andExpect(jsonPath("$.completed", Is.is(updateTodo.isCompleted())));       
     }
 
+ 
+ // JUnit test for delete todo REST API
+    @Test
+    public void givenTodoId_whenDeleteTodo_thenReturn200() throws Exception{
+        // given - precondition or setup
+        long todoId = 1L;
+        String task = "Task one";
+        boolean isCompleted = false;
+        Todo todo= new Todo(task,isCompleted);
+         
+        this.mockMvc.perform(post(TODO_PATH).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(todo)))
+        .andExpect(status().isCreated())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.task", Is.is(todo.getTask())));
+        this.mockMvc.perform(get(TODO_PATH)).andExpect(status().isOk());
 
+        // when -  action or the behaviour that we are going test
+        ResultActions response = mockMvc.perform(delete(TODO_PATH +"/{id}", todoId));
+
+        // then - verify the output
+        response.andExpect(status().is(204))
+                .andDo(print());
+    }
 }
