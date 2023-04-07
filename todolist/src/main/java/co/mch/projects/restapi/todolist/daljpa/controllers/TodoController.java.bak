@@ -1,4 +1,4 @@
-	package co.mch.projects.restapi.todolist.daljpa.controllers;
+package co.mch.projects.restapi.todolist.daljpa.controllers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import co.mch.projects.restapi.todolist.daljpa.repositories.TodoRepository;
+import co.mch.projects.restapi.todolist.dalbusiness.services.TodoService;
 import co.mch.projects.restapi.todolist.daljpa.model.Todo;
 /**
  * Rest Controler Component use to expose API Rest JSON web services
@@ -28,10 +30,17 @@ import co.mch.projects.restapi.todolist.daljpa.model.Todo;
 @RestController
 @RequestMapping("/api")
 public class TodoController {
-	@Autowired
-	TodoRepository todoRepository; // Inject dependency to the Repository component (Bean)
+	//@Autowired
+	//TodoRepository todoRepository; // Inject dependency to the Repository component (Bean)
 
-    /**
+	private TodoService todoService;
+	
+	
+    public TodoController(TodoService todoService) {
+		this.todoService = todoService;
+	}
+
+	/**
      * This method corresponds to HTTP GET method, that Queries all the Todo entities stored in H2 todolistapidb Data Base
      * 
      * @return ResponseEntity<List<Todo>> Todo Entity Collection
@@ -41,7 +50,8 @@ public class TodoController {
 	    try {
 	        List<Todo> todos = new ArrayList<Todo>();
 
-	        todoRepository.findAll().forEach(todos::add);
+	        //todoRepository.findAll().forEach(todos::add);
+	        todoService.getAllTodos().forEach(todos::add);
 
 	        if (todos.isEmpty()) {
 	          return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -60,7 +70,7 @@ public class TodoController {
      */
 	  @GetMapping("/todos/{id}")
 	  public ResponseEntity<Todo> getTodoTaskById(@PathVariable("id") long id) {
-		    Optional<Todo> todoData = todoRepository.findById(id);
+		    Optional<Todo> todoData = todoService.getTodoById(id);//todoRepository.findById(id);
 
 		    if (todoData.isPresent()) {
 		      return new ResponseEntity<>(todoData.get(), HttpStatus.OK);
@@ -75,10 +85,12 @@ public class TodoController {
      * @return ResponseEntity<Todo>: Todo Entity created
      */	  
 	  @PostMapping("/todos")
+	  @ResponseStatus(HttpStatus.CREATED)
 	  public ResponseEntity<Todo> createTodoTask(@RequestBody Todo todo) {
 	    try {
-	    	Todo _todo = todoRepository
-	          .save(new Todo(todo.getTask(),  false));
+	    	//Todo _todo = todoRepository
+	         // .save(new Todo(todo.getTask(),  false));
+	    	Todo _todo =todoService.saveTodo(new Todo(todo.getTask(),  false));
 	      return new ResponseEntity<>(_todo, HttpStatus.CREATED);
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -93,13 +105,14 @@ public class TodoController {
      */	 
 	  @PutMapping("/todos/{id}")
 	  public ResponseEntity<Todo> updateTodoTask(@PathVariable("id") long id, @RequestBody Todo todo) {
-	    Optional<Todo> todoData = todoRepository.findById(id);
+	    Optional<Todo> todoData = todoService.getTodoById(id); //todoRepository.findById(id);
 
 	    if (todoData.isPresent()) {
 	    	Todo _todo = todoData.get();
 	    	_todo.setTask(todo.getTask());
 	    	_todo.setCompleted(todo.isCompleted());
-	      return new ResponseEntity<>(todoRepository.save(_todo), HttpStatus.OK);
+	      //return new ResponseEntity<>(todoRepository.save(_todo), HttpStatus.OK);
+	    	return new ResponseEntity<>(todoService.updateTodo(_todo), HttpStatus.OK);
 	    } else {
 	      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
@@ -113,7 +126,8 @@ public class TodoController {
 	  @DeleteMapping("/todos/{id}")
 	  public ResponseEntity<HttpStatus> deleteTodoTask(@PathVariable("id") long id) {
 	    try {
-	    	todoRepository.deleteById(id);
+	    	//todoRepository.deleteById(id);
+	    	todoService.deleteTodo(id);
 	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -124,7 +138,7 @@ public class TodoController {
      * This method corresponds to HTTP DELETE method, that deletes all Todo entities stored in H2 todolistapidb Data Base
      * @return ResponseEntity<HttpStatus>: Http Status
      */
-	  @DeleteMapping("/todos")
+/*	  @DeleteMapping("/todos")
 	  public ResponseEntity<HttpStatus> deleteAllTodoTask() {
 	    try {
 	    	todoRepository.deleteAll();
@@ -133,6 +147,6 @@ public class TodoController {
 	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 
-	  }
+	  }*/
 
 }

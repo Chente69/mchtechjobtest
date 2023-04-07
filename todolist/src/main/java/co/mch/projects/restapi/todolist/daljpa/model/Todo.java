@@ -19,11 +19,10 @@ public class Todo {
     
     // Constructor methods
 	public Todo() {
-		// TODO Auto-generated constructor stub
+
 	}
 
 	public Todo(String task, boolean completed) {
-		super();
 		this.task = task;
 		this.completed = completed;
 	}
